@@ -1,10 +1,13 @@
+import org.jooq.meta.jaxb.Logging
+import org.jooq.meta.jaxb.Property
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
     id("org.springframework.boot") version "2.7.2"
-    id("io.spring.dependency-management") version "1.0.12.RELEASE"
+    id("io.spring.dependency-management") version "1.0.13.RELEASE"
     kotlin("jvm") version "1.6.21"
     kotlin("plugin.spring") version "1.6.21"
+    id("nu.studer.jooq") version "7.1.1"
 }
 
 group = "org.wrongwrong"
@@ -16,17 +19,21 @@ repositories {
 }
 
 dependencies {
-    implementation("org.springframework.boot:spring-boot-starter")
+    implementation("org.springframework.boot:spring-boot-starter-webflux")
 
     implementation("org.jetbrains.kotlin:kotlin-reflect")
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core")
+
+    implementation("com.h2database:h2")
 
     implementation("org.springframework.boot:spring-boot-starter-jooq")
-    implementation("org.jooq:jooq:3.17.2")
-    implementation("org.jooq:jooq-meta:3.17.2")
-
-    // https://mvnrepository.com/artifact/com.h2database/h2
-    testImplementation("com.h2database:h2:2.1.214")
+    // ここのバージョン類はdependency-managementプラグインの上書きのため
+    implementation("org.jooq:jooq:3.16.4")
+    implementation("org.jooq:jooq-meta:3.16.4")
+    implementation("org.jooq:jooq-codegen:3.16.4")
+    jooqGenerator("org.jooq:jooq-meta-extensions:3.16.4")
+    jooqGenerator("jakarta.xml.bind:jakarta.xml.bind-api:3.0.0")
 
     testImplementation("org.springframework.boot:spring-boot-starter-test") {
         exclude(group = "org.junit.vintage", module = "junit-vintage-engine")
@@ -42,4 +49,24 @@ tasks.withType<KotlinCompile> {
 
 tasks.withType<Test> {
     useJUnitPlatform()
+}
+
+jooq {
+    configurations {
+        create("main") {
+            jooqConfiguration.apply {
+                logging = Logging.WARN
+                generator.apply {
+                    name = "org.jooq.codegen.KotlinGenerator"
+                    database.apply {
+                        name = "org.jooq.meta.extensions.ddl.DDLDatabase"
+                        properties = listOf(
+                            Property().withKey("scripts").withValue("src/main/resources/schema.sql"),
+                            Property().withKey("sort").withValue("semantic")
+                        )
+                    }
+                }
+            }
+        }
+    }
 }
