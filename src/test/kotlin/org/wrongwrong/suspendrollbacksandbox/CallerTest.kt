@@ -1,5 +1,6 @@
 package org.wrongwrong.suspendrollbacksandbox
 
+import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -15,19 +16,11 @@ private class CallerTest @Autowired constructor(
 
     @BeforeEach
     fun callSaves() {
-        exec { caller.nonSuspend_nonSuspend() }
-        exec { caller.nonSuspend_nonSuspend_fail() }
-        exec { caller.nonSuspend_suspend() }
-        exec { caller.nonSuspend_suspend_fail() }
-
-        exec { runBlocking { caller.suspend_nonSuspend() } }
-        exec { runBlocking { caller.suspend_nonSuspend_fail() } }
-        exec { runBlocking { caller.suspend_suspend() } }
         exec { runBlocking { caller.suspend_suspend_fail() } }
     }
 
     @Test
     fun print() {
-        println("result:\n${repository.findAll()}")
+        println("result:\n${runBlocking { repository.findAll().toList() }}")
     }
 }

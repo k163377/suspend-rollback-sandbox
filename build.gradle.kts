@@ -20,14 +20,21 @@ repositories {
 
 dependencies {
     implementation("org.springframework.boot:spring-boot-starter-webflux")
+    implementation("org.springframework.boot:spring-boot-starter-data-r2dbc")
+    implementation("org.springframework.boot:spring-boot-starter-jooq")
 
     implementation("org.jetbrains.kotlin:kotlin-reflect")
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor")
+
+    implementation("io.projectreactor.kotlin:reactor-kotlin-extensions")
 
     implementation("com.h2database:h2")
 
-    implementation("org.springframework.boot:spring-boot-starter-jooq")
+    implementation("io.r2dbc:r2dbc-spi")
+    implementation("io.r2dbc:r2dbc-h2")
+
     // ここのバージョン類はdependency-managementプラグインの上書きのため
     implementation("org.jooq:jooq:3.16.4")
     implementation("org.jooq:jooq-meta:3.16.4")
