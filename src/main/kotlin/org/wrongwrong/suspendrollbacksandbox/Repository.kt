@@ -1,19 +1,28 @@
 package org.wrongwrong.suspendrollbacksandbox
 
-import kotlinx.coroutines.flow.single
-import kotlinx.coroutines.reactive.asFlow
-import org.jooq.DSLContext
+import io.r2dbc.spi.ConnectionFactory
+import kotlinx.coroutines.reactive.awaitSingle
+import kotlinx.coroutines.reactor.awaitSingleOrNull
+import org.jooq.generated.tables.records.FooTableRecord
 import org.jooq.generated.tables.references.FOO_TABLE
+import org.jooq.impl.DSL
+import org.springframework.r2dbc.connection.ConnectionHolder
 import org.springframework.stereotype.Repository
-import reactor.core.publisher.Flux
+import org.springframework.transaction.reactive.TransactionSynchronizationManager
 import reactor.core.publisher.Mono
+import java.lang.RuntimeException
 
 @Repository
-class Repository(private val create: DSLContext) {
-    fun findAll() = Flux.from(create.selectFrom(FOO_TABLE)).map { it.into(FOO_TABLE) }.asFlow()
+class Repository(private val cfi: ConnectionFactory) {
+    suspend fun suspendSave(value: String): FooTableRecord {
+        val holder: ConnectionHolder = TransactionSynchronizationManager.forCurrentTransaction()
+            .mapNotNull { it.getResource(cfi) as ConnectionHolder? }
+            .awaitSingleOrNull() ?: throw RuntimeException("トランザクションが取得できませんでした")
 
-    suspend fun suspendSave(value: String) = Mono.from(create.insertInto(FOO_TABLE).values(value).returning())
-        .map { it.into(FOO_TABLE) }
-        .asFlow()
-        .single()!!
+        val ctxt = DSL.using(holder.connection)
+
+        return Mono.from(ctxt.insertInto(FOO_TABLE).values(value).returning())
+            .map { it.into(FOO_TABLE) }
+            .awaitSingle()!!
+    }
 }
