@@ -1,7 +1,5 @@
 package org.wrongwrong.suspendrollbacksandbox
 
-import kotlinx.coroutines.reactive.awaitSingle
-import kotlinx.coroutines.runBlocking
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
 
@@ -16,7 +14,7 @@ class Caller(private val repository: Repository) {
     // region 呼び出し元がsuspend
     suspend fun suspend_suspend_fail() {
         val funcName = getFuncName()
-        println("$funcName on save\n${repository.suspendSave(funcName)}")
+        println("$funcName on save\n${repository.save(funcName)}")
         throw TestEx
     }
     // endregion
